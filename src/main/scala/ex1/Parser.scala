@@ -1,5 +1,7 @@
 package ex1
 
+import ex1.Parsers.charParser
+
 /** Consider the Parser example shown in previous lesson. Analogously to NonEmpty, create a mixin NotTwoConsecutive,
   * which adds the idea that one cannot parse two consecutive elements which are equal. Use it (as a mixin) to build
   * class NotTwoConsecutiveParser, used in the testing code at the end. Note we also test that the two mixins can work
@@ -12,7 +14,10 @@ abstract class Parser[T]:
   def parseAll(seq: Seq[T]): Boolean = (seq forall parse) & end // note &, not &&
 
 object Parsers:
-  val todo = ??? // put the extensions here..
+  extension(s: String)
+    def charParser(): Parser[Char] = BasicParser(s.toSet)
+
+
 class BasicParser(chars: Set[Char]) extends Parser[Char]:
   override def parse(t: Char): Boolean = chars.contains(t)
   override def end: Boolean = true
@@ -27,10 +32,34 @@ trait NonEmpty[T] extends Parser[T]:
 class NonEmptyParser(chars: Set[Char]) extends BasicParser(chars) with NonEmpty[Char]
 
 trait NotTwoConsecutive[T] extends Parser[T]:
-  val todo = ???
-// ???
+  private var lastElement: Option[T] = Option.empty[T]
+  private var noTwoSameCons: Boolean = true
+  abstract override def parse(t: T): Boolean = lastElement match
+    case None => {
+      lastElement = Some(t);
+      super.parse(t)
+    }
+    case Some(x) if x == t => {
+      lastElement = Some(t);
+      noTwoSameCons = false
+      super.parse(t)
+    }
+    case Some(x) if x != t => {
+      lastElement = Some(t);
+      super.parse(t)
+    }
+  abstract override def end: Boolean = super.end && noTwoSameCons
+class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) with NotTwoConsecutive[Char]
 
-class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) // with ????
+trait ShorterThanN extends Parser[Char]:
+  val n: Int
+  private var count: Int = 0
+
+  abstract override def parse(t: Char): Boolean = count match
+    case c if c < n => {count = count + 1; super.parse(t)}
+    case _ => false
+
+  abstract override def end: Boolean = count <= n && super.end
 
 @main def checkParsers(): Unit =
   def parser = new BasicParser(Set('a', 'b', 'c'))
@@ -56,7 +85,13 @@ class NotTwoConsecutiveParser(chars: Set[Char]) extends BasicParser(chars) // wi
   println(parserNTCNE.parseAll("XYYZ".toList)) // false
   println(parserNTCNE.parseAll("".toList)) // false
 
-  def sparser: Parser[Char] = ??? // "abc".charParser()
+  def sparser: Parser[Char] = "abc".charParser()
   println(sparser.parseAll("aabc".toList)) // true
   println(sparser.parseAll("aabcdc".toList)) // false
   println(sparser.parseAll("".toList)) // true
+
+  def parserSTN = new BasicParser(Set('X', 'Y', 'Z')) with ShorterThanN:
+    override val n: Int = 5
+  println(parserSTN.parseAll("XYZ".toList)) // true
+  println(parserSTN.parseAll("XYYZZZZZZZZZZZZZ".toList)) // false
+  println(parserSTN.parseAll("".toList)) // true
