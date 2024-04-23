@@ -36,3 +36,28 @@ class RobotSpec extends AnyFlatSpec with Matchers:
     robot.turn(Direction.West)
     robot.act()
     robot.position should be((0, 0))
+
+  "A robot with battery" should "behave correctly" in:
+    val robot = new RobotWithBattery(new SimpleRobot((0, 0), Direction.North), 50)
+
+    robot.act()
+    robot.position should be((0, 1))
+
+    robot.act()
+    robot.position should be((0, 2))
+
+    robot.act()
+    robot.position should be((0, 2))
+
+  "A robot can fail" should "behave correctly" in:
+    val robot = new RobotCanFail(new SimpleRobot((0, 0), Direction.North), 1.0)
+
+    robot.position should be((0, 0))
+    robot.act()
+    robot.position should be((0, 0))
+
+  "A robot repeated" should "behave correctly" in:
+    val robot = new RobotRepeated(new SimpleRobot((0, 0), Direction.North), 2)
+
+    robot.act()
+    robot.position should be((0, 2))
