@@ -53,9 +53,8 @@ class RobotWithBattery(val robot: Robot, var amount: Int) extends Robot:
 
 class RobotCanFail(val robot: Robot, var possibility: Double) extends Robot:
   export robot.{act =>_, *}
-  private var r: Double = 0
   override def act(): Unit =
-    r = Random.nextDouble()
+    val r: Double = Random.nextDouble()
     r match
       case fail if r < possibility => ()
       case _ => robot.act()

@@ -44,7 +44,7 @@ trait NotTwoConsecutive[T] extends Parser[T]:
       noTwoSameCons = false
       super.parse(t)
     }
-    case Some(x) if x != t => {
+    case _ => {
       lastElement = Some(t);
       super.parse(t)
     }
